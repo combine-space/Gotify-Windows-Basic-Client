@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -31,6 +32,7 @@ namespace GotifyClient
         private bool soundNotificationsEnabled = true;
         private bool windowsNotificationsEnabled = true;
         private Dictionary<int, string> applicationNames = new Dictionary<int, string>();
+        private Dictionary<int, string> applicationImageUrls = new Dictionary<int, string>();
         private static readonly int[] ReconnectDelaysSeconds = { 3, 6, 12, 30, 60 };
 
         public MainWindow()
@@ -288,9 +290,14 @@ namespace GotifyClient
                         var apps = JsonSerializer.Deserialize<List<GotifyApplication>>(json);
 
                         applicationNames.Clear();
+                        applicationImageUrls.Clear();
                         foreach (var app in apps)
                         {
                             applicationNames[app.id] = app.name;
+                            if (!string.IsNullOrEmpty(app.image))
+                            {
+                                applicationImageUrls[app.id] = $"{serverUrl}/{app.image.TrimStart('/')}";
+                            }
                         }
                     }
                 }
@@ -340,6 +347,7 @@ namespace GotifyClient
                         {
                             message.ApplicationName = applicationNames[message.appid];
                         }
+                        message.ApplicationImageUrl = applicationImageUrls.TryGetValue(message.appid, out var iconUrl) ? iconUrl : null;
 
                         Dispatcher.Invoke(() =>
                         {
@@ -470,6 +478,20 @@ namespace GotifyClient
             UpdateMessageCount();
         }
 
+        private void MarkdownScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            // FlowDocumentScrollViewer (base of MarkdownScrollViewer) swallows wheel input
+            // via its internal ScrollViewer even with scrollbars hidden - forward it manually
+            // so the outer message list keeps scrolling while hovering over a card's message body.
+            e.Handled = true;
+            var eventArg = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+            {
+                RoutedEvent = UIElement.MouseWheelEvent
+            };
+            var parent = VisualTreeHelper.GetParent((DependencyObject)sender) as UIElement;
+            parent?.RaiseEvent(eventArg);
+        }
+
         private void ToggleSoundNotification_Click(object sender, RoutedEventArgs e)
         {
             soundNotificationsEnabled = SoundNotificationMenuItem.IsChecked == true;
@@ -511,6 +533,7 @@ namespace GotifyClient
         public DateTime date { get; set; }
 
         public string ApplicationName { get; set; }
+        public string ApplicationImageUrl { get; set; }
 
         private string _relativeTime;
         public string RelativeTime
@@ -524,6 +547,8 @@ namespace GotifyClient
         }
 
         public string AppId => !string.IsNullOrEmpty(ApplicationName) ? ApplicationName : $"App #{appid}";
+        public bool HasApplicationImage => !string.IsNullOrEmpty(ApplicationImageUrl);
+        public bool ShowPriorityIcon => !HasApplicationImage;
         public string Title => title ?? "No title";
         public string Message => message ?? "";
         public string DateFormatted => GetLocalDate().ToString("dd/MM/yyyy HH:mm:ss");
@@ -548,10 +573,10 @@ namespace GotifyClient
             {
                 return priority switch
                 {
-                    >= 8 => "❗",
-                    >= 5 => "⚠️",
-                    >= 2 => "ℹ️",
-                    _ => "📌"
+                    >= 8 => "", // Segoe MDL2 Assets: Error - urgent
+                    >= 5 => "", // Segoe MDL2 Assets: Warning - important
+                    >= 2 => "", // Segoe MDL2 Assets: Info - normal
+                    _ => ""     // Segoe MDL2 Assets: Pin - low/default
                 };
             }
         }
@@ -602,6 +627,7 @@ namespace GotifyClient
         public int id { get; set; }
         public string token { get; set; }
         public string name { get; set; }
+        public string image { get; set; }
         public string description { get; set; }
     }
 

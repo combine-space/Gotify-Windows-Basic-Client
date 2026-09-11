@@ -1,6 +1,9 @@
 <Window x:Class="GotifyClient.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mdxam="clr-namespace:MdXaml;assembly=MdXaml"
+        xmlns:ae="clr-namespace:ICSharpCode.AvalonEdit;assembly=ICSharpCode.AvalonEdit"
+        xmlns:local="clr-namespace:GotifyClient"
         Title="Gotify Client" Height="750" Width="900"
         Icon="assets/gotify.ico"
         Closing="Window_Closing"
@@ -20,6 +23,59 @@
         <SolidColorBrush x:Key="SubtleButton" Color="#374151"/>
         <SolidColorBrush x:Key="SubtleButtonHover" Color="#4B5563"/>
         <SolidColorBrush x:Key="Accent" Color="#6366F1"/>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local:AppIconBrushConverter x:Key="AppIconBrushConverter"/>
+
+        <!-- Self-contained: Style.Resources does not merge across a BasedOn chain in WPF,
+             so this can't safely extend MdXaml's built-in styles - it defines everything it needs. -->
+        <Style x:Key="DarkMarkdownStyle" TargetType="FlowDocument">
+            <Setter Property="FontFamily" Value="Segoe UI Emoji, Segoe UI"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryText}"/>
+            <Setter Property="PagePadding" Value="0"/>
+            <Style.Resources>
+                <Style TargetType="Paragraph">
+                    <Setter Property="Margin" Value="0,0,0,4"/>
+                </Style>
+                <Style TargetType="Run">
+                    <Style.Triggers>
+                        <Trigger Property="Tag" Value="CodeSpan">
+                            <Setter Property="FontFamily" Value="Consolas"/>
+                            <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
+                            <Setter Property="Background" Value="{StaticResource BorderColor}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+                <Style TargetType="Span">
+                    <Style.Triggers>
+                        <Trigger Property="Tag" Value="CodeSpan">
+                            <Setter Property="FontFamily" Value="Consolas"/>
+                            <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
+                            <Setter Property="Background" Value="{StaticResource BorderColor}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+                <Style TargetType="Hyperlink">
+                    <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                    <Setter Property="TextDecorations" Value="Underline"/>
+                </Style>
+                <!-- Fenced code blocks (```...```) render as an embedded AvalonEdit TextEditor
+                     control, not FlowDocument text - it needs its own implicit style since the
+                     Run/Span/Paragraph styles above don't reach into a hosted UIElement. -->
+                <Style TargetType="ae:TextEditor">
+                    <Setter Property="Background" Value="{StaticResource BorderColor}"/>
+                    <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
+                    <Setter Property="FontFamily" Value="Consolas"/>
+                    <Setter Property="FontSize" Value="12"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="8"/>
+                    <Setter Property="WordWrap" Value="True"/>
+                    <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+                    <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
+                </Style>
+            </Style.Resources>
+        </Style>
     </Window.Resources>
     <Grid>
         <!-- Main Content -->
@@ -165,19 +221,35 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <!-- Icon -->
-                                        <Border Grid.Column="0" Width="50" Height="50" CornerRadius="10"
-                                                Background="{Binding PriorityColor}" Margin="0,0,15,0">
-                                            <TextBlock Text="{Binding PriorityIcon}" FontSize="24"
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <!-- Icon: per-app image when available, else priority glyph -->
+                                        <Border Grid.Column="0" Width="50" Height="50" CornerRadius="10" Margin="0,0,15,0">
+                                            <Border.Background>
+                                                <MultiBinding Converter="{StaticResource AppIconBrushConverter}">
+                                                    <Binding Path="ApplicationImageUrl"/>
+                                                    <Binding Path="PriorityColor"/>
+                                                </MultiBinding>
+                                            </Border.Background>
+                                            <TextBlock Text="{Binding PriorityIcon}" FontFamily="Segoe MDL2 Assets"
+                                                       FontSize="22" Foreground="White"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       Visibility="{Binding ShowPriorityIcon, Converter={StaticResource BoolToVis}}"/>
                                         </Border>
 
                                         <!-- Content -->
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" TextElement.FontFamily="Segoe UI Emoji, Segoe UI">
                                             <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold"
                                                        Foreground="{StaticResource PrimaryText}" TextWrapping="Wrap" Margin="0,0,0,4"/>
-                                            <TextBlock Text="{Binding Message}" FontSize="13" Foreground="{StaticResource SecondaryText}"
-                                                       TextWrapping="Wrap" MaxHeight="60" TextTrimming="CharacterEllipsis"/>
+                                            <mdxam:MarkdownScrollViewer
+                                                Markdown="{Binding Message}"
+                                                MarkdownStyle="{StaticResource DarkMarkdownStyle}"
+                                                VerticalScrollBarVisibility="Disabled"
+                                                HorizontalScrollBarVisibility="Disabled"
+                                                IsToolBarVisible="False"
+                                                Focusable="False"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Padding="0"
+                                                PreviewMouseWheel="MarkdownScrollViewer_PreviewMouseWheel"/>
                                             <TextBlock Text="{Binding AppId}" FontSize="11" Foreground="{StaticResource MutedText}"
                                                        Margin="0,6,0,0" FontWeight="Medium"/>
                                         </StackPanel>

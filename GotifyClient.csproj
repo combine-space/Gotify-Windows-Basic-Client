@@ -16,4 +16,8 @@
     <Resource Include="assets\gotify.ico" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MdXaml" Version="1.27.0" />
+  </ItemGroup>
+
 </Project>
