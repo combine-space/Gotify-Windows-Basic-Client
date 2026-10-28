@@ -97,7 +97,7 @@
                     </Grid>
 
                     <StackPanel VerticalAlignment="Center" Margin="10,0,0,0">
-                        <TextBlock Text="Notifications Center" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PrimaryText}"/>
+                        <TextBlock Text="Notification Center" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PrimaryText}"/>
                         <StackPanel Orientation="Horizontal">
                             <Ellipse x:Name="StatusIndicator" Width="8" Height="8" Fill="#EF4444" Margin="0,2,5,0"/>
                             <TextBlock x:Name="StatusTextBlock" Text="Disconnected" FontSize="12" Foreground="{StaticResource MutedText}"/>

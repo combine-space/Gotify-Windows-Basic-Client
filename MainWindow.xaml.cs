@@ -509,8 +509,9 @@ namespace GotifyClient
 
         private void ShowAbout_Click(object sender, RoutedEventArgs e)
         {
+            var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3);
             System.Windows.MessageBox.Show(
-                "Gotify Client v1.0\n\n" +
+                $"Gotify Client v{version}\n\n" +
                 "Native Windows client for Gotify\n" +
                 "Unofficial, community-built - not affiliated with the Gotify project\n\n" +
                 "Built with C# WPF\n" +
