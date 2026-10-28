@@ -4,24 +4,32 @@ Native Windows client in C# WPF to receive notifications from a Gotify server.
 
 ## Features
 
-- ✅ WebSocket connection to Gotify
-- ✅ Real-time notification reception
+- ✅ WebSocket connection to Gotify with real-time notification reception
 - ✅ Automatic reconnect with backoff if the connection drops
-- ✅ Native Windows notifications (balloon tips)
-- ✅ System tray icon
-- ✅ Automatic minimize-to-tray
-- ✅ Received message list
+- ✅ Markdown rendering of message bodies (bold, links, inline code, fenced code blocks with a dark-themed view)
+- ✅ Native Windows notifications (balloon tips) with optional sound
+- ✅ Gotify app icons on messages, with a priority indicator as fallback
+- ✅ System tray icon with automatic minimize-to-tray
+- ✅ Received message list, long messages are shown in full
 - ✅ Automatic configuration persistence
 
 ## Requirements
 
 - Windows 10/11
-- .NET 10.0 Runtime or SDK
 - A Gotify server with a client token
+- .NET 10.0 SDK, only if you build from source (the release download needs no .NET installation)
 
 ## Installation
 
-### Option 1: Build from source
+### Option 1: Download a release
+
+1. Download the latest `GotifyClient-vX.Y.Z-win-x64.zip` from the [Releases page](https://github.com/combine-space/Gotify-Windows-Basic-Client/releases)
+2. Extract the whole zip into a folder
+3. Run `GotifyClient.exe`
+
+Keep the extracted DLLs next to the exe, the app needs them to start.
+
+### Option 2: Build from source
 
 1. Install the [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 2. Open a terminal in the project directory
@@ -33,7 +41,7 @@ dotnet build -c Release
 
 The executable will be in: `bin/Release/net10.0-windows/GotifyClient.exe`
 
-### Option 2: Publish a self-contained build
+### Option 3: Publish a self-contained build
 
 To create a standalone executable that does not require .NET to be installed:
 
@@ -66,10 +74,11 @@ The configuration (server URL and token) is saved automatically to `gotify_confi
 
 ## Behavior
 
+- **Options menu (...)**: Toggles for sound notifications, Windows notifications and minimize to tray, plus About and Quit
 - **Minimize to tray**: Enable this option to minimize the app to the system tray instead of the taskbar
 - **Double-click the tray icon**: Restores the window
 - **Right-click the tray icon**: Shows the context menu (Open/Quit)
-- **Clear messages**: Removes the displayed message history (does not delete messages on the server)
+- **Clear all**: Removes the displayed message history (does not delete messages on the server)
 - **Dropped connection**: If the WebSocket connection is lost, the app automatically retries in the background with increasing delays (3s, 6s, 12s, 30s, then every 60s) until it reconnects. No manual action needed.
 
 ## Troubleshooting
@@ -80,7 +89,7 @@ The configuration (server URL and token) is saved automatically to `gotify_confi
 - Verify the token is valid
 - Confirm the Gotify server is reachable from your network
 - Ensure the WebSocket port is open (usually the same as HTTP/HTTPS)
-- If the connection was working before and just dropped, give it a moment — the app retries automatically. Use the settings dialog only if you need to change the server URL or token.
+- If the connection was working before and just dropped, give it a moment, the app retries automatically. Use the settings dialog only if you need to change the server URL or token.
 
 ### Notifications do not appear
 
@@ -97,6 +106,17 @@ If you use a self-signed certificate, you may need to update the code to accept 
 - WPF (Windows Presentation Foundation)
 - WebSocket for real-time connectivity
 - System.Windows.Forms for the tray icon
+- [MdXaml](https://github.com/whistyun/MdXaml) for markdown rendering
+
+## Security
+
+The release zips are self-contained and bundle the .NET runtime, so the app is only as current as the runtime it was built with. Each release is built with the latest .NET servicing SDK. Runtime updates are noted in the [changelog](CHANGELOG.md), and the fixes of every servicing release are documented in the [.NET 10 release notes](https://github.com/dotnet/core/tree/main/release-notes/10.0).
+
+If you build from source or use a framework-dependent build, keep your installed .NET runtime up to date.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the release history. It follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Credits
 
